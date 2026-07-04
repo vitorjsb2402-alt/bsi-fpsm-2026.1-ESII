@@ -1,0 +1,39 @@
+# ci.yml — pipeline de Integração Contínua (CI) da Avaliação Substitutiva.
+#
+# COMO USAR: copie este arquivo para  .github/workflows/ci.yml  no seu fork
+# (crie as pastas .github/ e workflows/ na RAIZ do repositório).
+#
+# A cada "git push", o GitHub Actions roda sozinho três etapas, nesta ordem,
+# e PARA na primeira que falhar (fail fast):
+#   1. lint  — ruff confere o estilo do código
+#   2. testes — pytest roda a suíte
+#   3. cobertura — exige pelo menos 80% do código exercitado (o "quality gate")
+# Se tudo passa, o pipeline fica verde ✅. Se algo falha, fica vermelho ❌.
+
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  qualidade:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: AS
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar ferramentas
+        run: pip install pytest pytest-cov ruff
+
+      - name: Lint (ruff)
+        run: ruff check .
+
+      - name: Testes + cobertura (gate de 80%)
+        run: pytest --cov=. --cov-report=term-missing --cov-fail-under=80
